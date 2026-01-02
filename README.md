@@ -1,6 +1,5 @@
 # 📧 EML to MBOX Converter
 
-![License](https://img.shields.io/github/license/yourusername/eml-to-mbox-converter)
 ![Python](https://img.shields.io/badge/python-3.x-blue)
 ![Platform](https://img.shields.io/badge/platform-macOS%20|%20Linux%20|%20Windows-lightgrey)
 
@@ -16,17 +15,23 @@ Seamlessly convert your `.eml` files into the universally accepted `.mbox` forma
 
 ## 🚀 Quick Start
 
-### 1. Clone the Repository
-
 ```bash
-git clone https://github.com/yourusername/eml-to-mbox-converter.git
+# 1. Clone the Repository
+git clone https://github.com/steliospavlidis/EML-to-Mbox.git
 cd eml-to-mbox-converter
 
-Make the Script Executable (macOS/Linux)
+# 2. Run the Script
+python3 eml_to_mbox.py /path/to/eml_folder /path/to/output.mbox
+
+# 3. (Optional) Make Executable on Unix Systems
 chmod +x eml_to_mbox.py
-
-Convert Your Emails
 ./eml_to_mbox.py /path/to/eml_folder /path/to/output.mbox
+```
 
-Windows Users
-python eml_to_mbox.py /path/to/eml_folder /path/to/output.mbox
+## 🪟 Windows Notes
+
+On Windows, always invoke the script explicitly via Python:
+
+```shell
+python eml_to_mbox.py C:\path\to\emls C:\path\to\output.mbox
+```
