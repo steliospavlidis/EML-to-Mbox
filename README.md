@@ -1,37 +1,37 @@
-# 📧 EML to MBOX Converter
+#  EML to MBOX Converter
 
 ![Python](https://img.shields.io/badge/python-3.x-blue)
-![Platform](https://img.shields.io/badge/platform-macOS%20|%20Linux%20|%20Windows-lightgrey)
+![Platform](https://img.shields.io/badge/platform-macOS%%20|%%20Linux%%20|%%20Windows-lightgrey)
 
-Seamlessly convert your `.eml` files into the universally accepted `.mbox` format with this lightweight, efficient, and user-friendly command-line tool. Whether you're migrating emails, archiving them, or just need a unified format, **EML to MBOX Converter** has got you covered.
+Convert .eml files into .mbox format. Works with exports from Outlook, Thunderbird, MailStore and other email clients.
 
-## ✨ Features
+##  Features
 
-- **Batch Conversion**: Effortlessly convert entire directories of `.eml` files to a single `.mbox` file.
-- **Cross-Platform Compatibility**: Works flawlessly on macOS, Linux, and Windows.
-- **Zero Dependencies**: Leverages Python’s built-in libraries—no need for additional installations.
-- **Customizable & Extensible**: The code is clean, well-documented, and easily adaptable to your specific needs.
-- **Performance-Optimized**: Handles large volumes of email data with ease.
+- **Batch Conversion**: Convert entire directories of .eml files to a single .mbox file.
+- **Encoding Safe**: Preserves original encoding (UTF-8, ISO-8859-*, KOI8-R, etc.) so emails in any language stay intact.
+- **Recursive Support**: Process .eml files in subdirectories with -r.
+- **Cross-Platform**: Works on macOS, Linux, and Windows.
+- **Zero Dependencies**: Uses only Python built-in libraries.
+- **Error Handling**: Clear error messages and per-file warnings.
 
-## 🚀 Quick Start
+##  Quick Start
 
-```bash
-# 1. Clone the Repository
+`ash
 git clone https://github.com/steliospavlidis/EML-to-Mbox.git
-cd eml-to-mbox-converter
+cd EML-to-Mbox
 
-# 2. Run the Script
 python3 eml_to_mbox.py /path/to/eml_folder /path/to/output.mbox
 
-# 3. (Optional) Make Executable on Unix Systems
-chmod +x eml_to_mbox.py
-./eml_to_mbox.py /path/to/eml_folder /path/to/output.mbox
-```
+# Include subdirectories
+python3 eml_to_mbox.py -r /path/to/eml_folder /path/to/output.mbox
+`
 
-## 🪟 Windows Notes
+##  Windows
 
-On Windows, always invoke the script explicitly via Python:
-
-```shell
+`shell
 python eml_to_mbox.py C:\path\to\emls C:\path\to\output.mbox
-```
+`
+
+##  Caution
+
+This tool does **not** modify or delete your original .eml files. However, the conversion may not be perfect for every email. Always keep your original files until you have verified the output is correct and complete.
