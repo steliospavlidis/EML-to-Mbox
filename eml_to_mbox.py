@@ -16,6 +16,9 @@ _HEADER_RETURNPATH_RE = re.compile(
 _HEADER_DATE_RE = re.compile(
     r'^Date:\s*(.*)', re.MULTILINE | re.IGNORECASE
 )
+_HEADER_MESSAGE_ID_RE = re.compile(
+    r'^Message-ID:[ \t]*(.*(?:\r?\n[ \t]+.*)*)', re.MULTILINE | re.IGNORECASE
+)
 _EMAIL_ADDR_ANGLE_RE = re.compile(r'<([^>]+)>')
 _EMAIL_ADDR_BARE_RE = re.compile(r'[\w.\-+]+@[\w.\-]+')
 
@@ -65,6 +68,18 @@ def _extract_date(headers_text):
     return time.asctime()
 
 
+def _extract_message_id(headers_text):
+    """Return the normalized Message-ID, or None if the header is missing."""
+    match = _HEADER_MESSAGE_ID_RE.search(headers_text)
+    if not match:
+        return None
+    value = re.sub(r'\s+', '', match.group(1))
+    angle = _EMAIL_ADDR_ANGLE_RE.search(value)
+    if angle:
+        value = angle.group(1)
+    return value or None
+
+
 def _strip_existing_envelope(raw_bytes):
     if raw_bytes.startswith(b'From ') and not raw_bytes.startswith(b'From:'):
         first_newline = raw_bytes.find(b'\n')
@@ -93,10 +108,14 @@ def _collect_eml_files(folder, recursive=False):
     return eml_files
 
 
-def convert_eml_to_mbox(eml_folder, mbox_file, recursive=False):
+def convert_eml_to_mbox(eml_folder, mbox_file, recursive=False, dedupe=False):
     """
     Convert .eml files to a single .mbox file using raw byte writes
     to preserve original encoding. Uses mboxrd quoting.
+
+    With dedupe=True, messages whose Message-ID was already written are
+    skipped (the first occurrence, in sorted path order, is kept).
+    Messages without a Message-ID are always kept.
     """
     eml_files = _collect_eml_files(eml_folder, recursive)
 
@@ -106,6 +125,9 @@ def convert_eml_to_mbox(eml_folder, mbox_file, recursive=False):
 
     converted = 0
     failed = 0
+    duplicates = 0
+    no_message_id = 0
+    seen_ids = set()
 
     with open(mbox_file, 'wb') as mbox:
         for eml_path in eml_files:
@@ -125,6 +147,17 @@ def convert_eml_to_mbox(eml_folder, mbox_file, recursive=False):
                     continue
 
                 headers_text, _ = _get_headers_text(raw)
+
+                if dedupe:
+                    message_id = _extract_message_id(headers_text)
+                    if message_id is None:
+                        no_message_id += 1
+                    elif message_id in seen_ids:
+                        duplicates += 1
+                        continue
+                    else:
+                        seen_ids.add(message_id)
+
                 sender = _extract_from_address(headers_text)
                 date_str = _extract_date(headers_text)
 
@@ -149,11 +182,15 @@ def convert_eml_to_mbox(eml_folder, mbox_file, recursive=False):
                 print(f"Warning: Failed to convert {eml_file}: {e}")
                 failed += 1
 
-    print(f"Conversion complete! {converted} email(s) saved to {mbox_file}", end="")
+    notes = []
     if failed:
-        print(f" ({failed} failed)")
-    else:
-        print()
+        notes.append(f"{failed} failed")
+    if dedupe:
+        notes.append(f"{duplicates} duplicate(s) skipped")
+        if no_message_id:
+            notes.append(f"{no_message_id} without Message-ID kept")
+    summary = f"Conversion complete! {converted} email(s) saved to {mbox_file}"
+    print(summary + (f" ({', '.join(notes)})" if notes else ""))
 
 
 if __name__ == "__main__":
@@ -175,6 +212,7 @@ if __name__ == "__main__":
             "  %(prog)s ./my_emails output.mbox\n"
             "  %(prog)s C:\\ExportedMail\\Inbox emails.mbox\n"
             "  %(prog)s /home/user/eml_backup combined.mbox\n"
+            "  %(prog)s -r -d ./incremental_backups archive.mbox\n"
             "\n"
             "The output .mbox file can be imported into Thunderbird, Apple\n"
             "Mail, mutt, or any other email client that supports mbox format.\n"
@@ -199,6 +237,15 @@ if __name__ == "__main__":
         "-r", "--recursive",
         action="store_true",
         help="also process .eml files in subdirectories",
+    )
+    parser.add_argument(
+        "-d", "--dedupe",
+        action="store_true",
+        help=(
+            "skip messages whose Message-ID was already written "
+            "(keeps the first occurrence; messages without a Message-ID "
+            "are always kept)"
+        ),
     )
 
     args = parser.parse_args()
@@ -237,4 +284,6 @@ if __name__ == "__main__":
     print(f"Converting to '{args.mbox_file}'...")
     print()
 
-    convert_eml_to_mbox(args.eml_folder, args.mbox_file, args.recursive)
+    convert_eml_to_mbox(
+        args.eml_folder, args.mbox_file, args.recursive, args.dedupe
+    )
