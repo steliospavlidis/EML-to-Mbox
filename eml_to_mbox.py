@@ -121,7 +121,7 @@ def convert_eml_to_mbox(eml_folder, mbox_file, recursive=False, dedupe=False):
 
     if not eml_files:
         print(f"No .eml files found in {eml_folder}")
-        return
+        return 0, 0
 
     converted = 0
     failed = 0
@@ -189,8 +189,13 @@ def convert_eml_to_mbox(eml_folder, mbox_file, recursive=False, dedupe=False):
         notes.append(f"{duplicates} duplicate(s) skipped")
         if no_message_id:
             notes.append(f"{no_message_id} without Message-ID kept")
-    summary = f"Conversion complete! {converted} email(s) saved to {mbox_file}"
+    if converted:
+        summary = f"Conversion complete! {converted} email(s) saved to {mbox_file}"
+    else:
+        summary = f"Conversion failed! No emails saved to {mbox_file}"
     print(summary + (f" ({', '.join(notes)})" if notes else ""))
+
+    return converted, failed
 
 
 if __name__ == "__main__":
@@ -284,6 +289,8 @@ if __name__ == "__main__":
     print(f"Converting to '{args.mbox_file}'...")
     print()
 
-    convert_eml_to_mbox(
+    converted, _failed = convert_eml_to_mbox(
         args.eml_folder, args.mbox_file, args.recursive, args.dedupe
     )
+    if converted == 0:
+        sys.exit(1)
